@@ -1,0 +1,23 @@
+{
+    "name": "dynamodb-activerecord",
+    "description": "An Amazon DynamoDB Active Record implementation",
+    "version": "0.1.0",
+    "author": "Alex Gadea <alex.gadea@leaflevellabs.com>",
+    "contributors": [],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/agad/dynamodb-activerecord.git"
+    },
+    "keywords": ["dynamodb", "amazon", "aws", "activerecord", "database"],
+    "dependencies": {
+        "aws-sdk" : ">= 0.9.7-pre.8"
+    },
+    "devDependencies": {
+        "vows": "0.5.x"
+    },
+    "directories": {
+        "lib": "lib"
+    },
+    "scripts": { "test": "vows test/*-test.js --spec" },
+    "engines": { "node": ">= 0.8.0" }
+}
