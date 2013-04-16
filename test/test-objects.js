@@ -199,11 +199,11 @@
                 assert.equal(topic._getmetadata().tablename, "test");
             }
         },
-        "When a DynamoDb Request Object for a new object is requested" : {
+        "When a DynamoDb Request Object to create a new record is requested" : {
             "and hashkey and version are only passed as keys and not as properties" : {
                 topic: function() {
                     var ar = new ActiveRecord({ name: "testname"}, {tablename : "test", hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    return ar._generatesaveddbrequestobject().request;
+                    return ar._generatesaveddbrequestobject();
                  },
                 "should properly assign a tablename": function(topic) {
                     assert.equal(topic.TableName, "test");
@@ -222,7 +222,7 @@
             "and hashkey value and property defaults are overridden" : {
                 topic: function() {
                     var ar = new ActiveRecord({ name: "testname", status: 2}, {tablename : "test", hashkey: "id", versionkey: "version",  properties: { id: { type: "N"},  name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    return ar._generatesaveddbrequestobject({newhashkeyvalue:200}).request;
+                    return ar._generatesaveddbrequestobject({newhashkeyvalue:200});
                 },
                 "should properly assign a tablename": function(topic) {
                     assert.equal(topic.TableName, "test");
@@ -240,7 +240,7 @@
             "and hashkey uuid1 generator is specified" : {
                 topic: function() {
                     var ar = new ActiveRecord({ name: "testname"}, {tablename : "test", hashkey: "id", properties: { id: { type: "S", generator: "uuidv1"},  name : { type : "S" }}});
-                    return ar._generatesaveddbrequestobject().request;
+                    return ar._generatesaveddbrequestobject();
                 },
                 "should properly populate the hashkey with UUIDv1" : function(topic) {
                     assert(topic.Item.id.S.match(/[0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i));
@@ -249,7 +249,7 @@
             "and hashkey uuid4 generator is specified" : {
                 topic: function() {
                     var ar = new ActiveRecord({ }, {tablename : "test", hashkey: "id", properties: { id: { type: "S", generator: "uuidv4"}}});
-                    return ar._generatesaveddbrequestobject().request;
+                    return ar._generatesaveddbrequestobject();
                 },
                 "should properly populate the hashkey with UUIDv4" : function(topic) {
                     assert(topic.Item.id.S.match(/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i));
@@ -258,7 +258,7 @@
             "and hashkey now generator is specified" : {
                 topic: function() {
                     var ar = new ActiveRecord({ }, {tablename : "test", hashkey: "id", properties: { id: { type: "N", generator: "now"}}});
-                    return ar._generatesaveddbrequestobject().request;
+                    return ar._generatesaveddbrequestobject();
                 },
                 "should properly populate the hashkey with a value that is a number with at least 13 digits" : function(topic) {
                     assert(topic.Item.id.N.match(/^[0-9]{13,}$/));
@@ -267,18 +267,42 @@
             "and hashkey generator is specified that is a function referring to another value in the passed object" : {
                 topic: function() {
                     var ar = new ActiveRecord({ status: 1 }, {tablename : "test", hashkey: "id", properties: { status : { type: "N"}, id: { type: "N", generator: function() { return this.status + 2 }}}});
-                    return ar._generatesaveddbrequestobject().request;
+                    return ar._generatesaveddbrequestobject();
                 },
                 "should properly populate the hashkey with a value of 3 returned from the generator function" : function(topic) {
                     assert.equal(topic.Item.id.N, "3");
                 }
             }
         },
-        "When a DynamoDd Request Object to delete an object is requested" : {
+        "When a DynamoDb Request Object to update an existing record is requested" : {
+            "and hashkey and version are only passed as keys and not as properties" : {
+                topic: function() {
+                    var ar = new ActiveRecord({ name: "testnameupdated" , id: 5, version : 2, status: 3}, {tablename : "test", hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
+                    return ar._generatesaveddbrequestobject();
+                },
+                "should properly assign a tablename": function(topic) {
+                    assert.equal(topic.TableName, "test");
+                },
+                "should properly populate the name when passed" : function(topic) {
+                    assert.equal(topic.Item.name.S, "testnameupdated");
+                },
+                "should properly populate the status value" : function(topic) {
+                    assert.equal(topic.Item.status.N, "3");
+                },
+                "should properly populate the hashkey and the version" : function(topic) {
+                    assert.equal(topic.Item.version.N, "3");
+                    assert(topic.Item.id.S, "5");
+                },
+                "should properly generate expected using 'old' version value" : function(topic) {
+                    assert.equal(topic.Expected.version.Value.N, "2");
+                }
+            },
+        },
+        "When a DynamoDb Request Object to delete a record is requested" : {
             "and hashkey and version but not rangekey are set" : {
                 topic: function() {
                     var ar = new ActiveRecord({ name: "testname", id : "1", version: "1"}, {tablename : "test", hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    return ar._generatedeleteddbrequestobject().request;
+                    return ar._generatedeleteddbrequestobject();
                 },
                 "should properly assign a tablename": function(topic) {
                     assert.equal(topic.TableName, "test");
@@ -296,7 +320,7 @@
             "and hashkey, rangekey and version are set" : {
                 topic: function() {
                     var ar = new ActiveRecord({ name: "testname", id : "1", version: "1", createdon : "now"}, {tablename : "test", hashkey: "id", rangekey : "createdon", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    return ar._generatedeleteddbrequestobject().request;
+                    return ar._generatedeleteddbrequestobject();
                 },
                 "should properly assign a tablename": function(topic) {
                     assert.equal(topic.TableName, "test");
@@ -311,10 +335,10 @@
                     assert.equal(topic.Expected.version.Value.N, 1);
                 }
             },
-            "and version not set" : {
+            "and version and rangekey not set" : {
                 topic: function() {
                     var ar = new ActiveRecord({ name: "testname", id : "1", version: "1"}, {tablename : "test", hashkey: "id", properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    return ar._generatedeleteddbrequestobject().request;
+                    return ar._generatedeleteddbrequestobject();
                 },
                 "should properly assign a tablename": function(topic) {
                     assert.equal(topic.TableName, "test");
@@ -322,10 +346,37 @@
                 "should properly assign the key element": function(topic) {
                     assert.equal(topic.Key.HashKeyElement.S, "1");
                 },
+                "should not assign the rangekey element": function(topic) {
+                    assert.deepEqual(topic.Key.RangeKeyElement, undefined);
+                },
                 "should not assign the expected element" : function(topic) {
                     assert.deepEqual(topic.Expected, undefined);
                 }
             }
+
+        },
+        "When a DynamoDb Request Object to get a record is requested" : {
+            "and hashkey but not rangekey are set and consistent read is passed as an option" : {
+                topic: function() {
+                    var ar = new ActiveRecord({tablename : "test", hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
+                    return ar._generategetddbrequestobject(1, {consistentread : true });
+                },
+                "should properly assign a tablename": function(topic) {
+                    assert.equal(topic.TableName, "test");
+                },
+                "should properly assign the key element": function(topic) {
+                    assert.equal(topic.Key.HashKeyElement.S, "1");
+                },
+                "should properly assign the consistentread element" : function(topic) {
+                    assert.equal(topic.ConsistentRead, true);
+                },
+                "should not assign the AttributesToGet element" : function(topic) {
+                    assert.deepEqual(topic.AttributesToGet, undefined);
+                }
+                "should not assign the rangekey element" : function(topic) {
+                    assert.deepEqual(topic.Key.RangeKeyElement, undefined);
+                }
+            },
         }
     }).export(module);
 

@@ -91,14 +91,52 @@ the save will replace the existing record.
 
 * __client:__ AWS client *[required]*
 * __options:__ upsert options
-* __callback:__
+* __callback:__ callback function that takes an error object and the response object (standard putItem AWS response object from the AWS SDK).
 
 The options object can contain the following properties:
+
 * __newhashkeyvalue:__ overrides any values already set for the hashkey.  Prevents defaults and generators from firing.  Only relevant during inserts.  Ignored during updates.
 * __newrangekeyvalue:__ overrides any values already set for the rangekey.  Prevents defaults and generators from firing.  Only relevant during inserts.  Ignored during updates.
 * __newversionkeyvalue:__ overrides any values already set for the version.  Prevents defaults and generators from firing for the versionkey.  This value can be set during inserts or updates.
-* getold:__ during an update, will return old values of the record before the update.  Irrelevant for inserts.
+* __getold:__ during an update, will return old values of the record before the update.  Irrelevant for inserts.
+* __dropversionconsistency:__ during an update, will not enforce version consistency, even if a versionkey has been defined.
 
 #### delete(client, options, callback)
+
+Persists deletion of the object from DynamoDb.
+
+* __client:__ AWS client *[required]*
+* __options:__ upsert options
+* __callback:__ callback function that takes an error object and the response object (standard deleteItem AWS response object from the AWS SDK).
+
+The options object can contain the following properties:
+
+* __getold:__ during an update, will return old values of the record before the update.  Irrelevant for inserts.
+* __dropversionconsistency:__ during an update, will not enforce version consistency, even if a versionkey has been defined.
+
+#### patch(client, attributes, options, callback)
+
+Selectively persists specific attribute updates on the object.
+
+* __client:__ AWS client *[required]*
+* __attributes:__ key/value attributes to update the object with
+* __options:__ patch options options
+* __callback:__ callback function that takes an error object and the response object (standard updateItem AWS response object from the AWS SDK).
+
 #### get(client, hashkeyvalue, rangekeyvalue, options, callback)
 
+Retrieves a single record from DynamoDb and hydrates the existing ActiveRecord object with the results.
+
+* __client:__ AWS client *[required]*
+* __hashkeyvalue:__ hashkey to retrieve *[required]*
+* __rangekeyvalue:__ rangekey to retrieve *[required]*
+* __options:__ get options options
+* __callback:__ callback function that takes an error object and the response object (standard getItem AWS response object from the AWS SDK).
+
+The options object accepts the following values:
+
+* __attributes:__ array of property names to retrieve from DynamoDb
+* __consistentread:__ whether the read should be consistent or not
+
+
+consistentread
