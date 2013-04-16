@@ -359,7 +359,7 @@
             "and hashkey but not rangekey are set and consistent read is passed as an option" : {
                 topic: function() {
                     var ar = new ActiveRecord({tablename : "test", hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    return ar._generategetddbrequestobject(1, {consistentread : true });
+                    return ar._generategetddbrequestobject({hashkeyvalue: 1}, {consistentread : true });
                 },
                 "should properly assign a tablename": function(topic) {
                     assert.equal(topic.TableName, "test");
@@ -367,16 +367,16 @@
                 "should properly assign the key element": function(topic) {
                     assert.equal(topic.Key.HashKeyElement.S, "1");
                 },
+                "should not assign the rangekey element" : function(topic) {
+                    assert.deepEqual(topic.Key.RangeKeyElement, undefined);
+                },
                 "should properly assign the consistentread element" : function(topic) {
                     assert.equal(topic.ConsistentRead, true);
                 },
                 "should not assign the AttributesToGet element" : function(topic) {
                     assert.deepEqual(topic.AttributesToGet, undefined);
                 }
-                "should not assign the rangekey element" : function(topic) {
-                    assert.deepEqual(topic.Key.RangeKeyElement, undefined);
-                }
-            },
+            }
         }
     }).export(module);
 
