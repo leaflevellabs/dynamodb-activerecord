@@ -143,6 +143,24 @@
                     assert.equal(arresult.name, "testname");
 
                 }
+            },
+            "when a record with the incorrect version is updated" : {
+                topic: function() {
+                    var self = this;
+                    var tblName = aws_tableprefix + "stringhashkeyandversion";
+                    var ar = new ActiveRecord({ name: "testname"}, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
+                    ar.create(dynamodb.client, function(err, response) {
+                        if(err) return self.callback(err);
+                        ar.version = 5;
+                        ar.update(dynamodb.client, { }, function(err, response) {
+                            return self.callback(err, response, ar);
+                        });
+                    });
+                },
+                "the responses should be an error" : function(err, response, arresult) {
+                    assert.equal(err.code, "ConditionalCheckFailedException");
+                    assert.deepEqual(response, null);
+                }
             }
         }
     ).export(module);

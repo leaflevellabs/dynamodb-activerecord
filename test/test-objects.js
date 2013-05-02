@@ -30,7 +30,6 @@
     };
 
     vows.describe('ActiveRecord Objects').addBatch({
-
         "A new active record object": {
             topic :  new ActiveRecord( obj, metadata),
             "should have the proper methods defined": function (topic)
@@ -280,7 +279,7 @@
                 "should properly generate expected using 'old' version value" : function(topic) {
                     assert.equal(topic.Expected.version.Value.N, "2");
                 }
-            },
+            }
         },
         "When a DynamoDb Request Object to delete a record is requested" : {
             "and hashkey and version but not rangekey are set" : {
