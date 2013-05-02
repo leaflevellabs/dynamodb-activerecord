@@ -33,7 +33,7 @@
                     var self = this;
                     var tblName = aws_tableprefix + "stringhashkeyandversion";
                     var ar = new ActiveRecord({ name: "testname"}, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    ar.save(dynamodb.client, function(err, response) {
+                    ar.create(dynamodb.client, function(err, response) {
                         return self.callback(err, response, ar);
                     });
                 },
@@ -51,8 +51,9 @@
                     var self = this;
                     var tblName = aws_tableprefix + "stringhashkeyandversion";
                     var ar = new ActiveRecord({ name: "testname"}, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    ar.save(dynamodb.client, function(err, response) {
+                    ar.create(dynamodb.client, function(err, response) {
                         if(err) return self.callback(err);
+
                         ar.delete(dynamodb.client, function(err, response) {
                             return self.callback(err, response, ar);
                         });
@@ -74,13 +75,13 @@
                     var self = this;
                     var tblName = aws_tableprefix + "stringhashkeyandversion";
                     var ar = new ActiveRecord({ name: "testname"}, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
-                    ar.save(dynamodb.client, function(err, response) {
+                    ar.create(dynamodb.client, function(err, response) {
                         if(err) return self.callback(err);
                         ar.name = "newname";
                         ar.status = 3;
                         var opts = {getold: true};
 
-                        ar.save(dynamodb.client, opts, function(err, response) {
+                        ar.update(dynamodb.client, opts, function(err, response) {
                             return self.callback(err, response, ar);
                         });
                     });
@@ -97,6 +98,50 @@
                     assert.equal(response.Attributes.version.N, "1");
                     assert.equal(response.Attributes.status.N, "1");
                     assert.equal(response.Attributes.name.S, "testname");
+                }
+            },
+            "when a new record is created and then another is created with the same id" : {
+                topic: function() {
+                    var self = this;
+                    var tblName = aws_tableprefix + "stringhashkeyandversion";
+                    var ar = new ActiveRecord({ name: "testname"}, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
+                    ar.create(dynamodb.client, function(err, response) {
+
+                        if(err) return self.callback(err);
+
+                        var ar2 = new ActiveRecord(
+                            { name: "testname2", id: ar.id},
+                            {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}}
+                        );
+
+                        ar2.create(dynamodb.client, function(err, response) {
+                            return self.callback(err, response, ar, ar2);
+                        });
+                    });
+                },
+                "the responses should be correct" : function(err, response, ar, ar2) {
+                    assert.equal(err.code, "ConditionalCheckFailedException");
+                }
+            },
+            "when a new record is created and then loaded" : {
+                topic: function() {
+                    var self = this;
+                    var tblName = aws_tableprefix + "stringhashkeyandversion";
+                    var ar = new ActiveRecord({ name: "testname"}, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
+                    ar.create(dynamodb.client, function(err, response) {
+                        if(err) return self.callback(err);
+                        var ar2 = new ActiveRecord({ }, {tablename : tblName, hashkey: "id", versionkey: "version",  properties: { name : { type : "S" }, status : { type : "N",  default: 1 }}});
+                        ar2.load(dynamodb.client, { hashkeyvalue : ar.id }, function(err, response) {
+                            return self.callback(err, response, ar2);
+                        });
+                    });
+                },
+                "the responses should be correct" : function(err, response, arresult) {
+                    assert.deepEqual(err, null);
+                    assert.equal(arresult.version, 1);
+                    assert.equal(arresult.status, 1);
+                    assert.equal(arresult.name, "testname");
+
                 }
             }
         }
